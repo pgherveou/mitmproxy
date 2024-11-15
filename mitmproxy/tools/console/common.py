@@ -846,6 +846,9 @@ def format_flow(
             render_func = format_http_flow_list
         else:
             render_func = format_http_flow_table
+
+        metadata = f.metadata if isinstance(f.metadata, dict) else {}
+
         return render_func(
             render_mode=render_mode,
             focused=focused,
@@ -854,7 +857,7 @@ def format_flow(
             request_method=f.request.method,
             request_scheme=scheme,
             request_host=f.request.pretty_host if hostheader else f.request.host,
-            request_path=f.request.path,
+            request_path=metadata.get("path") or f.request.path,
             request_url=f.request.pretty_url if hostheader else f.request.url,
             request_http_version=f.request.http_version,
             request_timestamp=f.request.timestamp_start,
