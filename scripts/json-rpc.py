@@ -1,6 +1,4 @@
 from mitmproxy import http
-import logging
-import os
 
 class JSONRPCMethodColumn:
     def load(self, loader):
@@ -24,26 +22,10 @@ class JSONRPCMethodColumn:
                 pass
 
     def response(self, flow: http.HTTPFlow):
-        if flow.request.headers.get("Json-Rpc-Method"):
+        if flow.response and flow.request.headers.get("Json-Rpc-Method"):
             flow.response.headers["Json-Rpc-Method"] = flow.request.headers["Json-Rpc-Method"]
 
 addons = [
     JSONRPCMethodColumn()
 ]
 
-# Configure logging
-logging.basicConfig(filename='requests.log', level=logging.INFO, format='%(asctime)s - %(message)s')
-FORWARD_PORT = int(os.getenv('FORWARD_PORT', "8545"))
-
-def request(flow: http.HTTPFlow) -> None:
-    logging.info(f"Request URL: {flow.request.pretty_url}")
-    logging.info(f"Request Method: {flow.request.method}")
-    logging.info(f"Request Headers: {flow.request.headers}")
-    logging.info(f"Request Body: {flow.request.content}")
-
-    flow.request.port = FORWARD_PORT
-
-def response(flow: http.HTTPFlow) -> None:
-    logging.info(f"Response Status Code: {flow.response.status_code}")
-    logging.info(f"Response Headers: {flow.response.headers}")
-    logging.info(f"Response Body: {flow.response.content}")
