@@ -497,6 +497,7 @@ def format_http_flow_table(
     request_scheme: str,
     request_host: str,
     request_path: str,
+    json_rpc_response: str,
     request_url: str,
     request_http_version: str,
     request_timestamp: float,
@@ -540,6 +541,9 @@ def format_http_flow_table(
     )
     items.append(
         ("weight", 1.0, TruncatedText(request_path, colorize_req(request_path), "left"))
+    )
+    items.append(
+        ("weight", 3.0, TruncatedText(json_rpc_response, colorize_req(json_rpc_response), "left"))
     )
 
     if intercepted and response_code:
@@ -857,7 +861,8 @@ def format_flow(
             request_method=f.request.method,
             request_scheme=scheme,
             request_host=f.request.pretty_host if hostheader else f.request.host,
-            request_path=metadata.get("path") or f.request.path,
+            request_path=metadata.get("json-rpc-path") or f.request.path,
+            json_rpc_response=metadata.get("json-rpc-response") or "No response",
             request_url=f.request.pretty_url if hostheader else f.request.url,
             request_http_version=f.request.http_version,
             request_timestamp=f.request.timestamp_start,

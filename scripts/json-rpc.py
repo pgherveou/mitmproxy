@@ -1,4 +1,5 @@
 from mitmproxy import http
+import json
 
 class JSONRPCMethodColumn:
     def load(self, loader):
@@ -21,13 +22,38 @@ class JSONRPCMethodColumn:
                 elif "method" in json_data:
                     methods.add(json_data["method"])
                 if methods:
-                    flow.metadata["path"] = ", ".join(methods)
+                    flow.metadata["json-rpc-path"] = ", ".join(methods)
             except ValueError:
                 pass
 
+
     def response(self, flow: http.HTTPFlow):
-        if flow.response and flow.request.headers.get("Json-Rpc-Method"):
-            flow.response.headers["Json-Rpc-Method"] = flow.request.headers["Json-Rpc-Method"]
+        if flow.metadata["json-rpc-path"]:
+            try:
+                if flow.response is None:
+                    flow.metadata["json-rpc-response"] = "No response"
+                    return
+                
+                json_data = flow.response.json()
+                results = set()
+                
+                if isinstance(json_data, list):
+                    for item in json_data:
+                        if "result" in item:
+                            results.add(json.dumps(item["result"]))
+                        elif "error" in item:
+                            results.add(json.dumps(item["error"]))
+                elif "result" in json_data:
+                    results.add(json.dumps(json_data["result"]))
+                elif "error" in json_data:
+                    results.add(json.dumps(json_data["error"]))
+                
+                if results:
+                    flow.metadata["json-rpc-response"] = ", ".join(results)
+                else:
+                    flow.metadata["json-rpc-response"] = "No result"
+            except (ValueError, TypeError):
+                pass
 
 addons = [
     JSONRPCMethodColumn()
