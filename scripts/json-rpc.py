@@ -1,5 +1,7 @@
 from mitmproxy import http
 import json
+from eth.vm.forks.arrow_glacier.transactions import ArrowGlacierTransactionBuilder as TransactionBuilder
+from eth_utils import  conversions
 
 class JSONRPCMethodColumn:
     def load(self, loader):
@@ -19,8 +21,14 @@ class JSONRPCMethodColumn:
                     for item in json_data:
                         if "method" in item:
                             methods.add(item["method"])
+
                 elif "method" in json_data:
                     methods.add(json_data["method"])
+                    if json_data["method"] == "eth_sendRawTransaction":
+                        raw_tx = conversions.to_bytes(hexstr=json_data["params"][0])
+                        decoded_tx = TransactionBuilder().decode(raw_tx)
+                        flow.metadata["decoded-tx"] = decoded_tx.__dict__
+
                 if methods:
                     flow.metadata["json-rpc-path"] = ", ".join(methods)
             except ValueError:
